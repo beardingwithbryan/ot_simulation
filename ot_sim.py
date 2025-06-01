@@ -161,11 +161,22 @@ def cip_sim():
     print("Sending CIP Packets")
     for target in cip_attack_list:
         try:
-            with LogixDriver(f'ethernet/ip/{target}/1') as plc:
-                plc.read('Program:MainProgram.A')
-                plc.write('Program:MainProgram.A', 42)
-                for _ in range(20):
-                    plc.write('Program:MainProgram.A', 42)
+            with LogixDriver(target) as plc:
+                print(plc)
+                plc.read('array{10}')
+                plc.read('array[5]{20}')
+                plc.read('string_tag')
+                plc.write('tag1', 0)
+                plc.write(('tag1', 0), ('tag2', 1), ('tag3', 2))
+                plc.write('array[10]{5}', [1, 2, 3, 4, 5])
+                plc.write('string_tag', 'Hello World!')
+                results = plc.read('tag1', 'tag2', 'tag3')
+                if all(results):
+                    print('They all worked!')
+                else:
+                    for result in results:
+                        if not result:
+                            print(f'Reading tag {result.tag} failed with error: {result.error}')
         except Exception as e:
             print("Error connecting to CIP Target")       
 
